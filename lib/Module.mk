@@ -29,17 +29,17 @@ LIB_STLIBNAME	:= libi2c.a
 
 LIB_TARGETS	:= $(LIB_SHLIBNAME)
 LIB_LINKS	:= $(LIB_SHSONAME) $(LIB_SHBASENAME)
-LIB_OBJECTS	:= smbus.o
+LIB_OBJECTS	:= smbus.o i2c_rdwr.o
 ifeq ($(BUILD_STATIC_LIB),1)
 LIB_TARGETS	+= $(LIB_STLIBNAME)
-LIB_OBJECTS	+= smbus.ao
+LIB_OBJECTS	+= smbus.ao i2c_rdwr.ao
 endif
 
 #
 # Libraries
 #
 
-$(LIB_DIR)/$(LIB_SHLIBNAME): $(LIB_DIR)/smbus.o
+$(LIB_DIR)/$(LIB_SHLIBNAME): $(LIB_DIR)/smbus.o $(LIB_DIR)/i2c_rdwr.o
 	$(CC) -shared $(LDFLAGS) -Wl,--version-script=$(LIB_DIR)/libi2c.map -Wl,-soname,$(LIB_SHSONAME) -o $@ $^ -lc
 
 $(LIB_DIR)/$(LIB_SHSONAME):
@@ -50,7 +50,7 @@ $(LIB_DIR)/$(LIB_SHBASENAME):
 	$(RM) $@
 	$(LN) $(LIB_SHLIBNAME) $@
 
-$(LIB_DIR)/$(LIB_STLIBNAME): $(LIB_DIR)/smbus.ao
+$(LIB_DIR)/$(LIB_STLIBNAME): $(LIB_DIR)/smbus.ao $(LIB_DIR)/i2c_rdwr.ao
 	$(RM) $@
 	$(AR) rcvs $@ $^
 
@@ -64,6 +64,12 @@ $(LIB_DIR)/smbus.o: $(LIB_DIR)/smbus.c $(INCLUDE_DIR)/i2c/smbus.h
 	$(CC) $(SOCFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
 $(LIB_DIR)/smbus.ao: $(LIB_DIR)/smbus.c $(INCLUDE_DIR)/i2c/smbus.h
+	$(CC) $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
+
+$(LIB_DIR)/i2c_rdwr.o: $(LIB_DIR)/i2c_rdwr.c $(INCLUDE_DIR)/i2c/i2c_rdwr.h
+	$(CC) $(SOCFLAGS) $(LIB_CFLAGS) -c $< -o $@
+
+$(LIB_DIR)/i2c_rdwr.ao: $(LIB_DIR)/i2c_rdwr.c $(INCLUDE_DIR)/i2c/i2c_rdwr.h
 	$(CC) $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
 #

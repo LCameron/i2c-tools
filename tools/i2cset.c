@@ -32,6 +32,10 @@
 #include "i2cbusses.h"
 #include "util.h"
 #include "../version.h"
+#include "i2c/i2c_rdwr.h"
+
+//Special value for raw I2C access instead of SMBUS
+#define I2C_RDWR_DATA_BLOCKS 99
 
 static void help(void) __attribute__ ((noreturn));
 
@@ -47,6 +51,7 @@ static void help(void)
 		"    w (word data)\n"
 		"    i (I2C block data)\n"
 		"    s (SMBus block data)\n"
+		"    d (bidirectional block data, command-response packets)\n"
 		"    Append p for SMBus PEC\n");
 	exit(1);
 }
@@ -144,6 +149,11 @@ static int confirm(const char *filename, int address, int size, int daddress,
 	if (pec)
 		fprintf(stderr, "PEC checking enabled.\n");
 
+	if (vmask && size == I2C_RDWR_DATA_BLOCKS){
+		fprintf(stderr, "Cannot use mask with combined data blocks");
+		dont++;
+	}
+
 	fprintf(stderr, "Continue? [%s] ", dont ? "y/N" : "Y/n");
 	fflush(stderr);
 	if (!user_ack(!dont)) {
@@ -165,6 +175,7 @@ int main(int argc, char *argv[])
 	int flags = 0;
 	int force = 0, yes = 0, version = 0, readback = 0;
 	unsigned char block[I2C_SMBUS_BLOCK_MAX];
+	unsigned char response[I2C_SMBUS_BLOCK_MAX];
 	int len;
 
 	/* handle (optional) flags first */
@@ -235,6 +246,7 @@ int main(int argc, char *argv[])
 		case 'w': size = I2C_SMBUS_WORD_DATA; break;
 		case 's': size = I2C_SMBUS_BLOCK_DATA; break;
 		case 'i': size = I2C_SMBUS_I2C_BLOCK_DATA; break;
+		case 'd': size = I2C_RDWR_DATA_BLOCKS; break;
 		default:
 			fprintf(stderr, "Error: Invalid mode '%s'!\n", argv[argc-1]);
 			help();
@@ -278,6 +290,7 @@ int main(int argc, char *argv[])
 		break;
 	case I2C_SMBUS_BLOCK_DATA:
 	case I2C_SMBUS_I2C_BLOCK_DATA:
+	case I2C_RDWR_DATA_BLOCKS:
 		for (len = 0; len + flags + 5 < argc; len++) {
 			value = strtol(argv[flags + len + 4], &end, 0);
 			if (*end || value < 0) {
@@ -379,6 +392,16 @@ int main(int argc, char *argv[])
 	case I2C_SMBUS_I2C_BLOCK_DATA:
 		res = i2c_smbus_write_i2c_block_data(file, daddress, len, block);
 		break;
+	case I2C_RDWR_DATA_BLOCKS:
+		res = i2c_combined_block_transfer(file,address,block,len,response,I2C_SMBUS_BLOCK_MAX);
+
+		int i;
+		for(i=0; i<I2C_SMBUS_BLOCK_MAX; i++){
+			printf("0x%0x ", response[i]);
+		}
+		printf("\n");
+
+		break;
 	default: /* I2C_SMBUS_BYTE_DATA */
 		res = i2c_smbus_write_byte_data(file, daddress, value);
 		break;
@@ -410,6 +433,10 @@ int main(int argc, char *argv[])
 		break;
 	case I2C_SMBUS_WORD_DATA:
 		res = i2c_smbus_read_word_data(file, daddress);
+		break;
+	case I2C_RDWR_DATA_BLOCKS:
+		//Can't do it?
+		res = -1;
 		break;
 	default: /* I2C_SMBUS_BYTE_DATA */
 		res = i2c_smbus_read_byte_data(file, daddress);

@@ -14,5 +14,6 @@ global:
   i2c_smbus_read_i2c_block_data;
   i2c_smbus_write_i2c_block_data;
   i2c_smbus_block_process_call;
+  i2c_combined_block_transfer;
 local: *;
  };

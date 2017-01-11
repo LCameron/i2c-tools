@@ -46,7 +46,7 @@ $(TOOLS_DIR)/i2cdetect.o: $(TOOLS_DIR)/i2cdetect.c $(TOOLS_DIR)/i2cbusses.h vers
 $(TOOLS_DIR)/i2cdump.o: $(TOOLS_DIR)/i2cdump.c $(TOOLS_DIR)/i2cbusses.h $(TOOLS_DIR)/util.h version.h $(INCLUDE_DIR)/i2c/smbus.h
 	$(CC) $(CFLAGS) $(TOOLS_CFLAGS) -c $< -o $@
 
-$(TOOLS_DIR)/i2cset.o: $(TOOLS_DIR)/i2cset.c $(TOOLS_DIR)/i2cbusses.h $(TOOLS_DIR)/util.h version.h $(INCLUDE_DIR)/i2c/smbus.h
+$(TOOLS_DIR)/i2cset.o: $(TOOLS_DIR)/i2cset.c $(TOOLS_DIR)/i2cbusses.h $(TOOLS_DIR)/util.h version.h $(INCLUDE_DIR)/i2c/smbus.h $(INCLUDE_DIR)/i2c/i2c_rdwr.h
 	$(CC) $(CFLAGS) $(TOOLS_CFLAGS) -c $< -o $@
 
 $(TOOLS_DIR)/i2cget.o: $(TOOLS_DIR)/i2cget.c $(TOOLS_DIR)/i2cbusses.h $(TOOLS_DIR)/util.h version.h $(INCLUDE_DIR)/i2c/smbus.h
